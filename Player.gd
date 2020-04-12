@@ -12,9 +12,12 @@ var drag_selecting = false
 var initial_mouse_select  = Vector3()
 var cur_mouse_select  = Vector3()
 var selected = []
+var building_preplacement_initial = false
+var building_preplacement = false
+var cur_building = null
 signal check_unit_pos
 signal move_units
-const building = preload("res://Building.tscn")
+const BUILDING = preload("res://Building.tscn")
 const SHIFT_KEY = 16777237
 const RAY_LENGTH = 1000
 const DEFAULT_ZOOM = Vector3(0, 27.7, 11.28)
@@ -149,6 +152,15 @@ func _process(delta):
 		
 	#left mouse button
 	if Input.is_action_just_pressed("ui_left_click"):
+		if building_preplacement_initial == true:
+			if building_preplacement == false:
+				building_preplacement = true
+			else:
+				building_preplacement = false
+				building_preplacement_initial = false
+				var m = mouse_raycast(1)
+				cur_building.set_global_transform(Transform(Basis(), Vector3(float(m.position.x), 1.62, float(m.position.z))))
+				cur_building = null
 		initial_mouse_select = get_viewport().get_mouse_position()
 	elif Input.is_action_pressed("ui_left_click"):
 		cur_mouse_select = get_viewport().get_mouse_position()
@@ -162,9 +174,14 @@ func _process(delta):
 			drag_selecting = false
 			select_box.visible = false
 			get_multiple_units()
+			
+	if building_preplacement_initial == true:
+		var m = mouse_raycast(1)
+		cur_building.set_global_transform(Transform(Basis(), Vector3(float(m.position.x), 1.62, float(m.position.z))))
 
 func _on_BuildSpriteArea_clicked_on():
-	var cur_building = building.instance()
-	var parent_node = get_parent()
-	parent_node.add_child(cur_building)
-	cur_building.translate(Vector3(-5, 1, 0))
+	if cur_building == null:
+		cur_building = BUILDING.instance()
+		print(cur_building)
+		get_parent().add_child(cur_building)
+		building_preplacement_initial = true
